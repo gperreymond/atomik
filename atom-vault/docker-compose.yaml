@@ -8,11 +8,9 @@ services:
     privileged: 'true'
     restart: 'always'
     cap_add:
-    - IPC_LOCK
+    - 'IPC_LOCK'
     environment:
     - 'VAULT_ADDR=http://127.0.0.1:8200'
-    ports:
-    - '8200:8200/tcp'
     networks:
       public:
     volumes:

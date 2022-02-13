@@ -1,0 +1,30 @@
+global:
+  sendAnonymousUsage: false
+ping:
+  entryPoint: "http"
+api:
+  dashboard: true
+  insecure: true
+pilot:
+  dashboard: false
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    watch: true
+    exposedByDefault: false
+  file:
+    filename: "/etc/traefik/config.yml"
+    watch: true
+log:
+  level: "INFO"
+  format: "json"
+entryPoints:
+  http:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: "https"
+          scheme: "https"
+  https:
+    address: ":443"

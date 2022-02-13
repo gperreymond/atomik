@@ -1,0 +1,18 @@
+{
+    "CN": "vault.docker.localhost",
+    "key": {
+        "algo": "rsa",
+        "size": 2048
+    },
+    "names": [{
+        "C": "FR",
+        "L": "Paris",
+        "O": "Atomik",
+        "OU": "Atomik Root CA",
+        "ST": "France"
+    }],
+    "hosts": [
+        "vault.docker.localhost",
+        "localhost"
+    ]
+  }
