@@ -1,0 +1,55 @@
+version: '3.7'
+
+services:
+  prometheus:
+    image: 'prom/prometheus:v2.33.3'
+    restart: 'always'
+    command:
+    - '--config.file=/etc/prometheus/prometheus.yml'
+    - '--storage.tsdb.path=/prometheus'
+    - '--storage.tsdb.retention.time=2h'
+    - '--storage.tsdb.retention.size=20GB'
+    - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+    - '--web.console.templates=/usr/share/prometheus/consoles'
+    volumes:
+    - './config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro'
+    - 'prometheus_data:/prometheus'
+    ports:
+    - '9090:9090/tcp'
+    networks:
+      public:
+
+  node-exporter:
+    image: 'prom/node-exporter:v1.3.1'
+    volumes:
+    - '/proc:/host/proc:ro'
+    - '/sys:/host/sys:ro'
+    - '/:/rootfs:ro'
+    command: 
+    - '--path.procfs=/host/proc' 
+    - '--path.sysfs=/host/sys'
+    - --collector.filesystem.ignored-mount-points
+    - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+    networks:
+      public:
+
+  grafana:
+    image: 'grafana/grafana:8.3.6'
+    user: '472'
+    ports:
+    - '3000:3000/tcp'
+    volumes:
+    - 'grafana_data:/var/lib/grafana'
+    - './config/grafana/provisioning/:/etc/grafana/provisioning/'
+    env_file:
+    - './config/grafana/config.monitoring'
+    networks:
+      public:
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  public:
+    external: true

@@ -1,0 +1,23 @@
+version: '3.7'
+
+services:
+  vault-server:
+    image: 'vault:1.9.3'
+    container_name: 'vault-server'
+    command: 'server'
+    privileged: 'true'
+    restart: 'always'
+    cap_add:
+    - IPC_LOCK
+    environment:
+    - 'VAULT_ADDR=http://127.0.0.1:8200'
+    ports:
+    - '8200:8200/tcp'
+    networks:
+      public:
+    volumes:
+    - './config:/vault/config'
+
+networks:
+  public:
+    external: true

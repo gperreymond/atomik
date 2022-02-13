@@ -1,0 +1,44 @@
+version: '3.7'
+
+services:
+  ldap-server:
+    image: 'osixia/openldap:1.5.0'
+    container_name: 'ldap-server'
+    restart: 'always'
+    environment:
+    - 'LDAP_ORGANISATION=Atomik'
+    - 'LDAP_DOMAIN=docker.localhost'
+    - 'LDAP_ADMIN_PASSWORD=changeme'
+    volumes:
+    - 'ldap_server_data:/var/lib/ldap'
+    - 'ldap_server_config:/etc/ldap/slapd.d'
+    networks:
+      public:
+
+  ldap-user-manager:
+    image: 'wheelybird/ldap-user-manager:v1.7'
+    container_name: 'ldap-user-manager'
+    restart: 'always'
+    environment:
+    - 'LDAP_URI=ldap://ldap-server'
+    - 'LDAP_BASE_DN=dc=docker,dc=localhost'
+    - 'LDAP_ADMIN_BIND_DN=cn=admin,dc=docker,dc=localhost'
+    - 'LDAP_ADMIN_BIND_PWD=changeme'
+    - 'LDAP_ADMINS_GROUP=admins'
+    - 'NO_HTTPS=true'
+    - 'LDAP_REQUIRE_STARTTLS=false'
+    - 'LDAP_IGNORE_CERT_ERRORS=true'
+    - 'ORGANISATION_NAME=Atomik'
+    - 'SERVER_HOSTNAME=docker.localhost'
+    ports:
+    - '8080:80/tcp'
+    networks:
+      public:
+
+volumes:
+  ldap_server_data:
+  ldap_server_config:
+
+networks:
+  public:
+    external: true

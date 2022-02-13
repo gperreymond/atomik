@@ -1,0 +1,15 @@
+version: '3.7'
+
+services:
+  traefik:
+    image: 'traefik:1.9.3'
+    restart: 'always'
+    ports:
+    - '80:80/tcp'
+    - '443:443/tcp'
+    networks:
+      public:
+
+networks:
+  public:
+    external: true
