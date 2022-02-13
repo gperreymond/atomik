@@ -1,0 +1,19 @@
+global:
+  sendAnonymousUsage: false
+ping:
+  entryPoint: http
+api:
+  dashboard: true
+  insecure: true
+pilot:
+  dashboard: false
+providers:
+  file:
+    filename: /etc/traefik/dynamic_conf.yaml
+    watch: true
+log:
+  level: INFO
+  format: json
+entryPoints:
+  http:
+    address: ':80'

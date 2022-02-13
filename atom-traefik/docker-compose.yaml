@@ -2,11 +2,12 @@ version: '3.7'
 
 services:
   traefik:
-    image: 'traefik:1.9.3'
+    image: 'traefik:v2.6.0'
+    container_name: traefik
     restart: 'always'
     ports:
-    - '80:80/tcp'
-    - '443:443/tcp'
+      - "80:80"
+      - "443:443"
     networks:
       public:
 

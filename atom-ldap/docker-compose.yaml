@@ -6,6 +6,7 @@ services:
     container_name: 'ldap-server'
     restart: 'always'
     environment:
+    - 'LDAP_TLS=false'
     - 'LDAP_ORGANISATION=Atomik'
     - 'LDAP_DOMAIN=docker.localhost'
     - 'LDAP_ADMIN_PASSWORD=changeme'
@@ -30,8 +31,6 @@ services:
     - 'LDAP_IGNORE_CERT_ERRORS=true'
     - 'ORGANISATION_NAME=Atomik'
     - 'SERVER_HOSTNAME=docker.localhost'
-    ports:
-    - '8080:80/tcp'
     networks:
       public:
 
