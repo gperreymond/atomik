@@ -7,16 +7,9 @@ SERVICE=$2
 # BEFORE
 # ------------------------
 
-if [ "$ACTION" = "--network-start" ]; then
+if [ "$ACTION" = "--initialize" ]; then
     docker network create public
-fi
-
-if [ "$ACTION" = "--cfssl-start" ]; then
-    rm -rf certs
-    mkdir certs
-    bin/cfssl gencert -initca ca.json | bin/cfssljson -bare certs/root-cert
-    bin/cfssl gencert -initca intermediate-ca.json | bin/cfssljson -bare certs/intermediate_ca
-    bin/cfssl sign -ca certs/root-cert.pem -ca-key certs/root-cert-key.pem -config cfssl.json -profile intermediate_ca certs/intermediate_ca.csr | bin/cfssljson -bare certs/intermediate_ca
+    ./bin/mkcert -install
 fi
 
 # ------------------------
@@ -25,11 +18,9 @@ fi
 
 if [ "$ACTION" = "--start" ]; then
     rm -rf "atom-${SERVICE}/certs"
-    mkdir "atom-${SERVICE}/certs"
-    if [ -f "atom-${SERVICE}/hostname.json" ]; then
-        bin/cfssl gencert -ca certs/intermediate_ca.pem -ca-key certs/intermediate_ca-key.pem -config cfssl.json -profile=peer "atom-${SERVICE}/hostname.json" | bin/cfssljson -bare "atom-${SERVICE}/certs/peer"
-        bin/cfssl gencert -ca certs/intermediate_ca.pem -ca-key certs/intermediate_ca-key.pem -config cfssl.json -profile=server "atom-${SERVICE}/hostname.json" | bin/cfssljson -bare "atom-${SERVICE}/certs/server"
-        bin/cfssl gencert -ca certs/intermediate_ca.pem -ca-key certs/intermediate_ca-key.pem -config cfssl.json -profile=client "atom-${SERVICE}/hostname.json" | bin/cfssljson -bare "atom-${SERVICE}/certs/client"
+    if [ -f "atom-${SERVICE}/hostname.txt" ]; then
+        mkdir "atom-${SERVICE}/certs"
+        ./bin/mkcert -cert-file "atom-${SERVICE}/certs/local-cert.pem" -key-file "atom-${SERVICE}/certs/local-key.pem" "docker.localhost" "*.docker.localhost"
     fi
     docker-compose --file atom-${SERVICE}/docker-compose.yaml up --detach --force-recreate
 fi
@@ -52,7 +43,7 @@ fi
 # ------------------------
 
 if [ "$ACTION" = "--vault-init" ]; then
-    initialized=$(curl -s http://localhost:8200/v1/sys/init | jq -r .initialized)
+    initialized=$(curl -s https://vault.docker.localhost/v1/sys/init | jq -r .initialized)
     echo "[INFO] initialized=${initialized}"
     if [ $initialized = "true" ]; then
         exit 0
@@ -62,19 +53,19 @@ if [ "$ACTION" = "--vault-init" ]; then
 fi
 
 if [ "$ACTION" = "--vault-unseal" ]; then
-    sealed=$(curl -s http://localhost:8200/v1/sys/seal-status | jq -r .sealed)
+    sealed=$(curl -s https://vault.docker.localhost/v1/sys/seal-status | jq -r .sealed)
     echo "[INFO] sealed=${sealed}"
     if [ $sealed = "true" ]; then
         root_token=$(cat data/vault.json | jq -r .root_token)
         echo "[INFO] root_token=${root_token}"
-        unseal_key_1=$(cat data/vault.json | jq -r .unseal_keys_b64[0])
+        unseal_key_1=$(cat data/vault.json | jq -r .unseal_keys_hex[0])
         echo "[INFO] unseal_key_1=${unseal_key_1}"
-        unseal_key_2=$(cat data/vault.json | jq -r .unseal_keys_b64[1])
+        unseal_key_2=$(cat data/vault.json | jq -r .unseal_keys_hex[1])
         echo "[INFO] unseal_key_2=${unseal_key_2}"
-        unseal_key_3=$(cat data/vault.json | jq -r .unseal_keys_b64[2])
+        unseal_key_3=$(cat data/vault.json | jq -r .unseal_keys_hex[2])
         echo "[INFO] unseal_key_3=${unseal_key_3}"
-        curl -s -X PUT -d '{"key":"${unseal_key_1}"}' -H "Content-Type: application/json" http://localhost:8200/v1/sys/unseal | jq
-        curl -s -X PUT -d '{"key":"${unseal_key_2}"}' -H "Content-Type: application/json" http://localhost:8200/v1/sys/unseal | jq
-        curl -s -X PUT -d '{"key":"${unseal_key_3}"}' -H "Content-Type: application/json" http://localhost:8200/v1/sys/unseal | jq
+        curl -s -X PUT -d "{\"key\":\"${unseal_key_1}\"}" -H "Content-Type: application/json" https://vault.docker.localhost/v1/sys/unseal | jq
+        curl -s -X PUT -d "{\"key\":\"${unseal_key_2}\"}" -H "Content-Type: application/json" https://vault.docker.localhost/v1/sys/unseal | jq
+        curl -s -X PUT -d "{\"key\":\"${unseal_key_3}\"}" -H "Content-Type: application/json" https://vault.docker.localhost/v1/sys/unseal | jq
     fi
 fi

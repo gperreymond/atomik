@@ -9,12 +9,8 @@ storage "file" {
 default_lease_ttl = "168h"
 max_lease_ttl = "720h"
 
-listener "tcp" {
-  address = "0.0.0.0:8200"
-  tls_disable = true
-}
-
 api_addr = "http://{{ GetInterfaceIP \"eth0\" }}:8200"
+cluster_addr = "http://{{ GetInterfaceIP \"eth0\" }}:8201"
 
 cache {
   use_auto_auth_token = false
