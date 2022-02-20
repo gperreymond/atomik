@@ -22,6 +22,10 @@ if [ "$ACTION" = "--start" ]; then
         mkdir "atom-${SERVICE}/certs"
         ./bin/mkcert -cert-file "atom-${SERVICE}/certs/local-cert.pem" -key-file "atom-${SERVICE}/certs/local-key.pem" "docker.localhost" "*.docker.localhost"
     fi
+    if [ "$SERVICE" = "databases" ]; then
+        echo "[INFO] Create couchdb databases"
+        curl -s -X PUT https://admin:changeme@couchdb.docker.localhost/vault
+    fi
     docker-compose --file atom-${SERVICE}/docker-compose.yaml up --detach --force-recreate
 fi
 
@@ -68,4 +72,9 @@ if [ "$ACTION" = "--vault-unseal" ]; then
         curl -s -X PUT -d "{\"key\":\"${unseal_key_2}\"}" -H "Content-Type: application/json" https://vault.docker.localhost/v1/sys/unseal | jq
         curl -s -X PUT -d "{\"key\":\"${unseal_key_3}\"}" -H "Content-Type: application/json" https://vault.docker.localhost/v1/sys/unseal | jq
     fi
+fi
+
+if [ "$ACTION" = "--vault-enable-ldap" ]; then
+    root_token=$(cat data/vault.json | jq -r .root_token)
+    echo "[INFO] root_token=${root_token}"
 fi
