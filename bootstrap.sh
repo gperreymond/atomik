@@ -59,17 +59,18 @@ if [ "$ACTION" = "--vault-unseal" ]; then
     sealed=$(curl -s https://vault.docker.localhost/v1/sys/seal-status | jq -r .sealed)
     echo "[INFO] sealed=${sealed}"
     if [ $sealed = "true" ]; then
-        root_token=$(cat data/vault.json | jq -r .root_token)
-        echo "[INFO] root_token=${root_token}"
         unseal_key_1=$(cat data/vault.json | jq -r .unseal_keys_hex[0])
         echo "[INFO] unseal_key_1=${unseal_key_1}"
+        docker exec -it vault-server-1 vault operator unseal ${unseal_key_1}
+        docker exec -it vault-server-2 vault operator unseal ${unseal_key_1}
         unseal_key_2=$(cat data/vault.json | jq -r .unseal_keys_hex[1])
         echo "[INFO] unseal_key_2=${unseal_key_2}"
+        docker exec -it vault-server-1 vault operator unseal ${unseal_key_2}
+        docker exec -it vault-server-2 vault operator unseal ${unseal_key_2}
         unseal_key_3=$(cat data/vault.json | jq -r .unseal_keys_hex[2])
         echo "[INFO] unseal_key_3=${unseal_key_3}"
-        curl -s -X PUT -d "{\"key\":\"${unseal_key_1}\"}" -H "Content-Type: application/json" https://vault.docker.localhost/v1/sys/unseal | jq
-        curl -s -X PUT -d "{\"key\":\"${unseal_key_2}\"}" -H "Content-Type: application/json" https://vault.docker.localhost/v1/sys/unseal | jq
-        curl -s -X PUT -d "{\"key\":\"${unseal_key_3}\"}" -H "Content-Type: application/json" https://vault.docker.localhost/v1/sys/unseal | jq
+        docker exec -it vault-server-1 vault operator unseal ${unseal_key_3}
+        docker exec -it vault-server-2 vault operator unseal ${unseal_key_3}
     fi
 fi
 
