@@ -1,27 +1,6 @@
 version: '3.7'
 
 services:
-  couchdb:
-    image: 'bitnami/couchdb:3.2.1'
-    container_name: 'couchdb'
-    restart: 'always'
-    environment:
-    - 'COUCHDB_USER=admin'
-    - 'COUCHDB_PASSWORD=changeme'
-    - 'COUCHDB_CREATE_DATABASES=yes'
-    labels:
-    - 'traefik.enable=true'
-    - 'traefik.http.routers.couchdb.rule=Host(`couchdb.docker.localhost`)'
-    - 'traefik.http.routers.couchdb.tls=true'
-    - 'traefik.http.services.couchdb.loadbalancer.server.scheme=http'
-    - 'traefik.http.services.couchdb.loadbalancer.server.port=5984'
-    volumes:
-    - 'couchdb_data:/bitnami/couchdb'
-    networks:
-      public:
-
-volumes:
-  couchdb_data:
 
 networks:
   public:

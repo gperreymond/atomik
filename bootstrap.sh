@@ -23,10 +23,9 @@ if [ "$ACTION" = "--start" ]; then
         ./bin/mkcert -cert-file "atom-${SERVICE}/certs/local-cert.pem" -key-file "atom-${SERVICE}/certs/local-key.pem" "docker.localhost" "*.docker.localhost"
     fi
     if [ "$SERVICE" = "databases" ]; then
-        echo "[INFO] Create couchdb databases"
-        curl -s -X PUT https://admin:changeme@couchdb.docker.localhost/vault
+        echo "[INFO] databases, something to do..."
     fi
-    docker-compose --file atom-${SERVICE}/docker-compose.yaml up --detach --force-recreate
+    docker-compose --env-file .env --file atom-${SERVICE}/docker-compose.yaml up --detach --force-recreate
 fi
 
 if [ "$ACTION" = "--stop" ]; then
@@ -34,11 +33,11 @@ if [ "$ACTION" = "--stop" ]; then
 fi
 
 if [ "$ACTION" = "--stop-all" ]; then
-    docker-compose --file atom-consul/docker-compose.yaml down
-    docker-compose --file atom-ldap/docker-compose.yaml down
-    docker-compose --file atom-monitoring/docker-compose.yaml down
-    docker-compose --file atom-traefik/docker-compose.yaml down
-    docker-compose --file atom-vault/docker-compose.yaml down
+    docker-compose --env-file .env --file atom-ldap/docker-compose.yaml down
+    docker-compose --env-file .env --file atom-monitoring/docker-compose.yaml down
+    docker-compose --env-file .env --file atom-traefik/docker-compose.yaml down
+    docker-compose --env-file .env --file atom-vault/docker-compose.yaml down
+    docker-compose --env-file .env --file atom-consul/docker-compose.yaml down
     docker network rm public
 fi
 
@@ -53,7 +52,7 @@ if [ "$ACTION" = "--vault-init" ]; then
         exit 0
     fi
     mkdir data
-    docker exec -it vault-server vault operator init -format=json > data/vault.json
+    docker exec -it vault-server-1 vault operator init -format=json > data/vault.json
 fi
 
 if [ "$ACTION" = "--vault-unseal" ]; then
@@ -77,4 +76,19 @@ fi
 if [ "$ACTION" = "--vault-enable-ldap" ]; then
     root_token=$(cat data/vault.json | jq -r .root_token)
     echo "[INFO] root_token=${root_token}"
+    docker exec -it vault-server-1 vault login $root_token
+    docker exec -it vault-server-1 vault auth enable ldap
+    # auth ldap
+    docker exec -it vault-server-1 vault write auth/ldap/config \
+        url="ldap://ldap-server" \
+        binddn="uid=ldap.bind,ou=people,dc=docker,dc=localhost" \
+        bindpass="scott-Deny-slower-44" \
+        userdn="ou=people,dc=docker,dc=localhost" \
+        userattr="uid" \
+        groupdn="ou=groups,dc=docker,dc=localhost" \
+        groupattr="cn" \
+        deny_null_bind=true \
+        insecure_tls=false
+    docker exec -it vault-server-1 vault policy write vault-admins /etc/vault/policies/vault-admins.hcl
+    docker exec -it vault-server-1 vault write auth/ldap/groups/vault-admins policies=vault-admins
 fi

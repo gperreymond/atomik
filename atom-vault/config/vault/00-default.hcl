@@ -2,12 +2,6 @@ cluster_name = "europe-paris"
 
 ui = true
 
-storage "couchdb" {
-  endpoint = "http://couchdb:5984/vault"
-  username = "admin"
-  password = "changeme"
-}
-
 default_lease_ttl = "168h"
 max_lease_ttl = "720h"
 

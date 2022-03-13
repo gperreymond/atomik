@@ -1,2 +1,70 @@
 version: '3.7'
 
+services:
+
+  # *******************
+  # CLUSTER: 1
+  # *******************
+
+  consul-server-1:
+    image: 'consul:${APP_CONSUL_VERSION}'
+    container_name: 'consul-server-1'
+    command: 'agent -node=consul-server-1'
+    privileged: 'true'
+    restart: 'always'
+    volumes:
+    - './config:/consul/config'
+    labels:
+    - 'traefik.enable=true'
+    - 'traefik.http.routers.consul.rule=Host(`consul.docker.localhost`)'
+    - 'traefik.http.routers.consul.tls=true'
+    - 'traefik.http.services.consul.loadbalancer.server.scheme=http'
+    - 'traefik.http.services.consul.loadbalancer.server.port=8500'
+    networks:
+      public:
+
+  # *******************
+  # CLUSTER: 2
+  # *******************
+
+  consul-server-2:
+    image: 'consul:${APP_CONSUL_VERSION}'
+    container_name: 'consul-server-2'
+    command: 'agent -node=consul-server-2'
+    privileged: 'true'
+    restart: 'always'
+    volumes:
+    - './config:/consul/config'
+    labels:
+    - 'traefik.enable=true'
+    - 'traefik.http.routers.consul.rule=Host(`consul.docker.localhost`)'
+    - 'traefik.http.routers.consul.tls=true'
+    - 'traefik.http.services.consul.loadbalancer.server.scheme=http'
+    - 'traefik.http.services.consul.loadbalancer.server.port=8500'
+    networks:
+      public:
+
+  # *******************
+  # CLUSTER: 3
+  # *******************
+
+  consul-server-3:
+    image: 'consul:${APP_CONSUL_VERSION}'
+    container_name: 'consul-server-3'
+    command: 'agent -node=consul-server-3'
+    privileged: 'true'
+    restart: 'always'
+    volumes:
+    - './config:/consul/config'
+    labels:
+    - 'traefik.enable=true'
+    - 'traefik.http.routers.consul.rule=Host(`consul.docker.localhost`)'
+    - 'traefik.http.routers.consul.tls=true'
+    - 'traefik.http.services.consul.loadbalancer.server.scheme=http'
+    - 'traefik.http.services.consul.loadbalancer.server.port=8500'
+    networks:
+      public:
+
+networks:
+  public:
+    external: true

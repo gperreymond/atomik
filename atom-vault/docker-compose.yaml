@@ -1,9 +1,14 @@
 version: '3.7'
 
 services:
-  vault-server:
-    image: 'vault:1.9.3'
-    container_name: 'vault-server'
+
+  # *******************
+  # CLUSTER: 1
+  # *******************
+
+  vault-server-1:
+    image: 'vault:${APP_VAULT_VERSION}'
+    container_name: 'vault-server-1'
     command: 'server'
     privileged: 'true'
     restart: 'always'
@@ -12,13 +17,64 @@ services:
     environment:
     - 'VAULT_ADDR=http://127.0.0.1:8200'
     volumes:
-    - './config:/vault/config'
+    - './policies:/etc/vault/policies:ro'
+    - './config/vault/:/vault/config'
+    - './config/02-storage-1.hcl:/vault/config/02-storage.hcl'
     labels:
     - 'traefik.enable=true'
     - 'traefik.http.routers.vault.rule=Host(`vault.docker.localhost`)'
     - 'traefik.http.routers.vault.tls=true'
     - 'traefik.http.services.vault.loadbalancer.server.scheme=http'
     - 'traefik.http.services.vault.loadbalancer.server.port=8200'
+    networks:
+      public:
+
+  consul-agent-vault-server-1:
+    image: 'consul:${APP_CONSUL_VERSION}'
+    container_name: 'consul-agent-vault-server-1'
+    command: 'agent -node=consul-agent-vault-server-1'
+    privileged: 'true'
+    restart: 'always'
+    volumes:
+    - './config/consul:/consul/config'
+    networks:
+      public:
+
+  # *******************
+  # CLUSTER: 2
+  # *******************
+
+  vault-server-2:
+    image: 'vault:${APP_VAULT_VERSION}'
+    container_name: 'vault-server-2'
+    command: 'server'
+    privileged: 'true'
+    restart: 'always'
+    cap_add:
+    - 'IPC_LOCK'
+    environment:
+    - 'VAULT_ADDR=http://127.0.0.1:8200'
+    volumes:
+    - './policies:/etc/vault/policies:ro'
+    - './config/vault/:/vault/config'
+    - './config/02-storage-2.hcl:/vault/config/02-storage.hcl'
+    labels:
+    - 'traefik.enable=true'
+    - 'traefik.http.routers.vault.rule=Host(`vault.docker.localhost`)'
+    - 'traefik.http.routers.vault.tls=true'
+    - 'traefik.http.services.vault.loadbalancer.server.scheme=http'
+    - 'traefik.http.services.vault.loadbalancer.server.port=8200'
+    networks:
+      public:
+
+  consul-agent-vault-server-2:
+    image: 'consul:${APP_CONSUL_VERSION}'
+    container_name: 'consul-agent-vault-server-2'
+    command: 'agent -node=consul-agent-vault-server-2'
+    privileged: 'true'
+    restart: 'always'
+    volumes:
+    - './config/consul:/consul/config'
     networks:
       public:
 
